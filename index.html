@@ -3,17 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>CampusFind — Lost & Found for Colleges</title>
-    <meta name="description" content="Find lost items or help others recover theirs across colleges worldwide.">
+    <title>CampusFind — College Lost & Found Platform</title>
+    <meta name="description" content="Find lost items or help others recover theirs across colleges and campuses worldwide.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet Maps (100% Free, Open Source, No API Key Required) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
     <link rel="stylesheet" href="style.css">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1633176919553819"
-     crossorigin="anonymous"></script>
 </head>
 <body>
-    <!-- Background blobs -->
+    <!-- Background glow decorations -->
     <div class="bg-decoration blob-1"></div>
     <div class="bg-decoration blob-2"></div>
     <div class="bg-decoration blob-3"></div>
@@ -23,43 +26,49 @@
         <nav class="navbar" id="navbar">
             <div class="nav-brand" onclick="window.scrollTo({top:0,behavior:'smooth'})">
                 <div class="brand-icon">🎓</div>
-                CampusFind
+                <span>CampusFind</span>
             </div>
+
+            <!-- Storage & Sync Status Indicator -->
+            <div class="status-pill status-connecting" id="storageStatusPill" title="Connection & Database Status">
+                <span class="status-dot"></span>
+                <span class="status-text" id="storageStatusText">Connecting...</span>
+            </div>
+
             <ul class="nav-links" id="navLinks">
                 <li><a href="#home" class="active" data-nav="home">Home</a></li>
+                <li><a href="#mapSection" data-nav="map">Campus Map</a></li>
                 <li><a href="#items-section" data-nav="all">All Items</a></li>
                 <li><a href="#items-section" data-nav="lost">Lost</a></li>
                 <li><a href="#items-section" data-nav="found">Found</a></li>
-                <li><a href="#colleges-section" data-nav="colleges">Colleges</a></li>
-                <li><a href="#" id="navReportBtn">Report</a></li>
+                <li><a href="#" id="navReportBtn">Report Item</a></li>
             </ul>
             <div class="nav-actions">
-                <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle Dark/Light Mode">
                     <span class="icon-sun">☀️</span>
                     <span class="icon-moon">🌙</span>
                 </button>
-                <button class="btn btn-primary btn-sm" id="heroReportBtn">+ Report</button>
+                <button class="btn btn-primary btn-sm" id="heroReportBtn">+ Report Item</button>
                 <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">☰</button>
             </div>
         </nav>
 
-        <!-- Hero -->
+        <!-- Hero Section -->
         <section class="hero" id="home">
             <h1>Lost Something on <span class="highlight">Campus?</span></h1>
-            <p>Find lost items or help others recover theirs across colleges worldwide.</p>
+            <p>Find lost items or help fellow students recover theirs quickly across colleges and departments.</p>
             <div class="hero-search">
                 <div class="search-box">
                     <span class="search-icon-inline">🔍</span>
-                    <input type="text" id="heroSearchInput" placeholder="Search reports...">
+                    <input type="text" id="heroSearchInput" placeholder="Search by item name, ID, or location...">
                 </div>
                 <div class="college-search-box-hero" id="heroCollegeSearchContainer">
-                    <input type="text" id="heroCollegeSearch" placeholder="🏛️ Find your college...">
-                    <div id="heroCollegeSuggestions" class="autocomplete-suggestions"></div>
+                    <input type="text" id="heroCollegeSearch" placeholder="🏛️ Filter by your college..." list="popularCollegesList">
                 </div>
             </div>
             <div class="hero-buttons">
-                <button class="btn btn-primary" id="reportLostHero">📝 Report Lost</button>
-                <button class="btn btn-outline" id="reportFoundHero">✅ Report Found</button>
+                <button class="btn btn-primary" id="reportLostHero">🔴 Report Lost Item</button>
+                <button class="btn btn-outline" id="reportFoundHero">🟢 Report Found Item</button>
             </div>
         </section>
 
@@ -67,20 +76,19 @@
         <div class="map-section" id="mapSection">
             <div class="map-floating-search">
                 <div class="search-college-map">
-                    <input type="text" id="mapCollegeSearch" placeholder="Search college on map...">
-                    <div id="mapCollegeSuggestions" class="autocomplete-suggestions"></div>
+                    <input type="text" id="mapCollegeSearch" placeholder="🔍 Search campus / college on map..." list="popularCollegesList">
                 </div>
             </div>
             <div class="map-container" id="mapContainer">
                 <div id="map"></div>
             </div>
             <div class="map-info-bar">
-                <span id="locationStatus">📍 Click "Detect" to find nearby colleges</span>
+                <span id="locationStatus">📍 Interactive Map: Click any marker to view college reports</span>
                 <button class="btn btn-ghost btn-sm" id="detectLocationBtn">📍 Detect My Location</button>
             </div>
         </div>
 
-        <!-- Stats -->
+        <!-- Stats Grid -->
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="stat-icon lost">📌</div>
@@ -95,7 +103,7 @@
             <div class="stat-card">
                 <div class="stat-icon returned">✅</div>
                 <div class="stat-number" id="statReturned">0</div>
-                <div class="stat-label">Returned</div>
+                <div class="stat-label">Reunited</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon colleges">🏛️</div>
@@ -104,20 +112,20 @@
             </div>
         </div>
 
-        <!-- Filters -->
+        <!-- Filters Section -->
         <div class="filters-section">
             <div class="search-wrapper">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Search items...">
+                <input type="text" id="searchInput" placeholder="Search items, tags, descriptions...">
             </div>
             <select id="filterCategory" class="filter-select">
                 <option value="all">📂 All Categories</option>
-                <option value="Mobiles">📱 Mobiles</option>
                 <option value="ID Cards">🪪 ID Cards</option>
-                <option value="Books">📚 Books</option>
-                <option value="Bags">🎒 Bags</option>
-                <option value="Electronics">💻 Electronics</option>
-                <option value="Accessories">⌚ Accessories</option>
+                <option value="Mobiles">📱 Mobiles</option>
+                <option value="Books">📚 Books & Notes</option>
+                <option value="Bags">🎒 Bags & Pouches</option>
+                <option value="Electronics">💻 Electronics / Chargers</option>
+                <option value="Accessories">⌚ Watches & Accessories</option>
                 <option value="Others">📦 Others</option>
             </select>
             <select id="filterStatus" class="filter-select">
@@ -129,91 +137,111 @@
             <select id="filterCollege" class="filter-select">
                 <option value="all">🏛️ All Colleges</option>
             </select>
-            <button class="btn btn-ghost btn-sm" id="clearFilters">✕ Clear</button>
+            <button class="btn btn-ghost btn-sm" id="clearFilters">✕ Reset</button>
         </div>
 
-        <!-- Active Filters -->
+        <!-- Active Filter Tags -->
         <div class="active-filters" id="activeFilters"></div>
 
-        <!-- Items -->
+        <!-- Items Section -->
         <div id="items-section">
-            <h2 class="section-title"><span class="section-icon">📋</span> Recent Reports</h2>
+            <div class="section-header-flex">
+                <h2 class="section-title"><span class="section-icon">📋</span> Recent Reports</h2>
+                <button class="btn btn-ghost btn-sm" id="refreshItemsBtn">🔄 Refresh</button>
+            </div>
             <div class="items-grid" id="itemsGrid"></div>
             <div class="empty-state" id="emptyState">
                 <div class="empty-emoji">📭</div>
-                <h3>No reports yet</h3>
-                <p>Be the first to report a lost or found item!</p>
+                <h3>No items match your filter</h3>
+                <p>Try searching for a different item or submit a new report!</p>
+                <button class="btn btn-primary btn-sm" onclick="document.getElementById('heroReportBtn').click()">+ Submit First Report</button>
             </div>
         </div>
 
-        <!-- Recently Returned -->
-        <h2 class="section-title"><span class="section-icon">🎉</span> Recently Returned</h2>
+        <!-- Recently Returned Section -->
+        <h2 class="section-title"><span class="section-icon">🎉</span> Successfully Reunited Items</h2>
         <div class="recovered-scroll" id="recoveredScroll"></div>
     </div>
 
     <!-- Report Modal -->
     <div class="modal-overlay" id="reportModalOverlay">
         <div class="modal" id="reportModal">
-            <button class="close-btn" id="closeReportModal">✕</button>
+            <button class="close-btn" id="closeReportModal" aria-label="Close">✕</button>
             <h2 id="reportModalTitle">Report an Item</h2>
-            <p class="modal-subtitle">Fill in the details to help reunite items with their owners.</p>
+            <p class="modal-subtitle">Provide details to help reunite items with students quickly.</p>
             <form id="reportForm">
+                <!-- Image Upload Zone -->
                 <div class="form-group image-upload-zone" id="imageUploadZone">
-                    <span id="uploadPlaceholder">📸 Click to upload image</span>
-                    <img id="uploadPreview" style="display:none;" alt="Preview">
+                    <div id="uploadPlaceholder">
+                        <div class="upload-icon">📸</div>
+                        <span>Click to upload item photo (optional)</span>
+                        <small>PNG, JPG up to 5MB</small>
+                    </div>
+                    <div id="previewContainer" style="display:none; position:relative;">
+                        <img id="uploadPreview" alt="Item Preview">
+                        <button type="button" class="btn-remove-img" id="removeImgBtn" title="Remove photo">✕</button>
+                    </div>
                     <input type="file" id="itemImage" accept="image/*">
                 </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="itemName">Item Name *</label>
-                        <input type="text" id="itemName" required>
+                        <input type="text" id="itemName" placeholder="e.g. Student ID Card, Blue HP Charger" required>
                     </div>
                     <div class="form-group">
                         <label for="reportCategory">Category *</label>
                         <select id="reportCategory" required>
-                            <option value="">Select</option>
-                            <option value="Mobiles">📱 Mobiles</option>
+                            <option value="">Select Category</option>
                             <option value="ID Cards">🪪 ID Cards</option>
-                            <option value="Books">📚 Books</option>
-                            <option value="Bags">🎒 Bags</option>
-                            <option value="Electronics">💻 Electronics</option>
-                            <option value="Accessories">⌚ Accessories</option>
+                            <option value="Mobiles">📱 Mobiles</option>
+                            <option value="Books">📚 Books & Notes</option>
+                            <option value="Bags">🎒 Bags & Pouches</option>
+                            <option value="Electronics">💻 Electronics / Chargers</option>
+                            <option value="Accessories">⌚ Watches & Accessories</option>
                             <option value="Others">📦 Others</option>
                         </select>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="reportStatus">Status *</label>
                         <select id="reportStatus" required>
-                            <option value="lost">🔴 Lost</option>
-                            <option value="found">🟢 Found</option>
+                            <option value="lost">🔴 Lost (I lost this)</option>
+                            <option value="found">🟢 Found (I found this)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="reportCollegeName">College *</label>
-                        <input type="text" id="reportCollegeName" readonly required placeholder="Search & select a college">
+                        <label for="reportCollegeName">College / Institute *</label>
+                        <input type="text" id="reportCollegeName" placeholder="e.g. SVGPTC Tirupati" list="popularCollegesList" required>
                         <input type="hidden" id="reportCollegePlaceId">
                         <input type="hidden" id="reportCollegeLat">
                         <input type="hidden" id="reportCollegeLng">
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label for="reportLocation">Campus Location *</label>
-                    <input type="text" id="reportLocation" required>
+                    <input type="text" id="reportLocation" placeholder="e.g. Main Library 2nd floor, Near Canteen, Workshop Block" required>
                 </div>
+
                 <div class="form-group">
-                    <label for="reportDescription">Description</label>
-                    <textarea id="reportDescription" rows="3"></textarea>
+                    <label for="reportDescription">Description & Distinguishing Details</label>
+                    <textarea id="reportDescription" rows="3" placeholder="Colour, brand, stickers, serial number, scratch marks, etc."></textarea>
                 </div>
-                <div class="form-group">
-                    <label for="reportContact">Contact Info *</label>
-                    <input type="text" id="reportContact" required>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="reportContact">Contact Phone or Email *</label>
+                        <input type="text" id="reportContact" placeholder="e.g. 9876543210 or student@gmail.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reportDate">Date *</label>
+                        <input type="date" id="reportDate" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="reportDate">Date</label>
-                    <input type="date" id="reportDate" required>
-                </div>
+
                 <button type="submit" class="btn btn-primary btn-full" id="submitReportBtn">
                     <span class="btn-text">📤 Submit Report</span>
                     <span class="btn-loader" style="display:none;">⏳ Saving...</span>
@@ -222,11 +250,36 @@
         </div>
     </div>
 
-    <!-- Toast -->
+    <!-- Item Detail & Contact Modal -->
+    <div class="modal-overlay" id="detailModalOverlay">
+        <div class="modal modal-lg" id="detailModal">
+            <button class="close-btn" id="closeDetailModal" aria-label="Close">✕</button>
+            <div id="detailModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Datalist for Colleges -->
+    <datalist id="popularCollegesList">
+        <option value="SVGPTC Tirupati">
+        <option value="Sri Venkateswara University (SVU), Tirupati">
+        <option value="IIT Madras">
+        <option value="IIT Bombay">
+        <option value="IIT Delhi">
+        <option value="NIT Trichy">
+        <option value="NIT Warangal">
+        <option value="Anna University, Chennai">
+        <option value="JNTU Anantapur">
+        <option value="JNTU Kakinada">
+        <option value="VIT Vellore">
+        <option value="SRM University">
+        <option value="Delhi University">
+    </datalist>
+
+    <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
     <footer class="app-footer">
-        <p>© 2025 <strong>CampusFind</strong> — Lost & Found for Colleges. Built with ❤️ for students.</p>
+        <p>© 2026 <strong>CampusFind</strong> — College Lost & Found Platform. Designed for students & campuses.</p>
     </footer>
 
     <script type="module" src="script.js"></script>
