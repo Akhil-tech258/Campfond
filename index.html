@@ -233,20 +233,6 @@
             <h2 id="reportModalTitle">Report an Item</h2>
             <p class="modal-subtitle">Provide details to help reunite items with students quickly.</p>
             <form id="reportForm">
-                <!-- Image Upload Zone -->
-                <div class="form-group image-upload-zone" id="imageUploadZone">
-                    <div id="uploadPlaceholder">
-                        <div class="upload-icon">📸</div>
-                        <span>Click to upload item photo (optional)</span>
-                        <small>PNG, JPG up to 5MB</small>
-                    </div>
-                    <div id="previewContainer" style="display:none; position:relative;">
-                        <img id="uploadPreview" alt="Item Preview">
-                        <button type="button" class="btn-remove-img" id="removeImgBtn" title="Remove photo">✕</button>
-                    </div>
-                    <input type="file" id="itemImage" accept="image/*">
-                </div>
-
                 <div class="form-row">
                     <div class="form-group">
                         <label for="itemName">Item Name *</label>
@@ -370,22 +356,8 @@
         </div>
     </div>
 
-    <!-- Datalist for Colleges -->
-    <datalist id="popularCollegesList">
-        <option value="SVGPTC Tirupati">
-        <option value="Sri Venkateswara University (SVU), Tirupati">
-        <option value="IIT Madras">
-        <option value="IIT Bombay">
-        <option value="IIT Delhi">
-        <option value="NIT Trichy">
-        <option value="NIT Warangal">
-        <option value="Anna University, Chennai">
-        <option value="JNTU Anantapur">
-        <option value="JNTU Kakinada">
-        <option value="VIT Vellore">
-        <option value="SRM University">
-        <option value="Delhi University">
-    </datalist>
+    <!-- Datalist for Colleges (Populated dynamically) -->
+    <datalist id="popularCollegesList"></datalist>
 
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
