@@ -1,8 +1,8 @@
 /* ============================================================
    CAMPUSFIND — script.js
    College Lost & Found Platform
+   Dedicated College Hub & Campus-First Architecture
    Resilient Dual Engine: Firebase Firestore + LocalStorage Fallback
-   Leaflet.js OpenStreetMap (100% Free, Zero API Key Required)
    ============================================================ */
 
 'use strict';
@@ -42,22 +42,19 @@ try {
   console.warn("Firebase initialization skipped/offline:", err);
 }
 
-// ==================== COLLEGE COORDINATES DATABASE ====================
-const COLLEGE_COORDS = {
-  "SVGPTC Tirupati": { lat: 13.6288, lng: 79.4192 },
-  "Sri Venkateswara University (SVU), Tirupati": { lat: 13.6358, lng: 79.4042 },
-  "IIT Madras": { lat: 12.9915, lng: 80.2337 },
-  "IIT Bombay": { lat: 19.1334, lng: 72.9133 },
-  "IIT Delhi": { lat: 28.5450, lng: 77.1926 },
-  "NIT Trichy": { lat: 10.7589, lng: 78.8132 },
-  "NIT Warangal": { lat: 17.9835, lng: 79.5308 },
-  "Anna University, Chennai": { lat: 13.0110, lng: 80.2354 },
-  "JNTU Anantapur": { lat: 14.6542, lng: 77.6074 },
-  "JNTU Kakinada": { lat: 16.9786, lng: 82.2415 },
-  "VIT Vellore": { lat: 12.9692, lng: 79.1559 },
-  "SRM University": { lat: 12.8230, lng: 80.0444 },
-  "Delhi University": { lat: 28.6892, lng: 77.2104 }
-};
+// ==================== POPULAR COLLEGES DATABASE ====================
+const POPULAR_COLLEGES = [
+  { name: "SVGPTC Tirupati", subtitle: "Sri Venkateswara Govt Polytechnic", icon: "🏛️", city: "Tirupati, AP" },
+  { name: "Sri Venkateswara University (SVU), Tirupati", subtitle: "SVU Campus", icon: "🎓", city: "Tirupati, AP" },
+  { name: "IIT Madras", subtitle: "Indian Institute of Technology", icon: "🔬", city: "Chennai, TN" },
+  { name: "IIT Bombay", subtitle: "Indian Institute of Technology", icon: "🚀", city: "Mumbai, MH" },
+  { name: "IIT Delhi", subtitle: "Indian Institute of Technology", icon: "💻", city: "New Delhi" },
+  { name: "NIT Trichy", subtitle: "National Institute of Technology", icon: "⚙️", city: "Tiruchirappalli, TN" },
+  { name: "NIT Warangal", subtitle: "National Institute of Technology", icon: "⚡", city: "Warangal, TS" },
+  { name: "Anna University, Chennai", subtitle: "CEG Campus", icon: "📚", city: "Chennai, TN" },
+  { name: "JNTU Anantapur", subtitle: "College of Engineering", icon: "🏗️", city: "Anantapur, AP" },
+  { name: "VIT Vellore", subtitle: "Vellore Institute of Technology", icon: "🌐", city: "Vellore, TN" }
+];
 
 // ==================== REALISTIC SAMPLE DATA ====================
 const SEED_ITEMS = [
@@ -67,13 +64,12 @@ const SEED_ITEMS = [
     category: "ID Cards",
     status: "lost",
     collegeName: "SVGPTC Tirupati",
-    location: "Near Computer Lab 2, 1st Floor",
+    location: "Computer Lab 2, 1st Floor",
     description: "Diploma in CSE 2nd Year ID Card with blue college lanyard. Roll number ending with 042.",
     contact: "9876543210",
     date: new Date(Date.now() - 3600000 * 5).toISOString().split('T')[0],
     createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    image: null,
-    coords: { lat: 13.6288, lng: 79.4192 }
+    image: null
   },
   {
     id: "seed_2",
@@ -81,13 +77,12 @@ const SEED_ITEMS = [
     category: "Electronics",
     status: "found",
     collegeName: "SVGPTC Tirupati",
-    location: "Central Library Reading Hall (Table #14)",
-    description: "Scientific calculator with white sliding cover. Found after evening study hours. Safe with librarian.",
+    location: "Central Library Reading Hall (Desk #14)",
+    description: "Scientific calculator with white sliding cover. Left on table during evening study hours. Safe with librarian.",
     contact: "library@svgptc.edu",
     date: new Date(Date.now() - 3600000 * 20).toISOString().split('T')[0],
     createdAt: new Date(Date.now() - 3600000 * 20).toISOString(),
-    image: null,
-    coords: { lat: 13.6288, lng: 79.4192 }
+    image: null
   },
   {
     id: "seed_3",
@@ -95,13 +90,12 @@ const SEED_ITEMS = [
     category: "Accessories",
     status: "lost",
     collegeName: "SVGPTC Tirupati",
-    location: "Campus Canteen near counter 2",
+    location: "Campus Canteen counter table",
     description: "Black charging case with a red silicone sleeve and small carabiner clip attached.",
     contact: "9123456789",
     date: new Date(Date.now() - 3600000 * 30).toISOString().split('T')[0],
     createdAt: new Date(Date.now() - 3600000 * 30).toISOString(),
-    image: null,
-    coords: { lat: 13.6295, lng: 79.4200 }
+    image: null
   },
   {
     id: "seed_4",
@@ -109,13 +103,12 @@ const SEED_ITEMS = [
     category: "Bags",
     status: "found",
     collegeName: "SVGPTC Tirupati",
-    location: "Main Gate Security Cabin",
+    location: "Main Gate / Security Cabin",
     description: "Contains 3 engineering drawing notebooks and a steel water bottle. Left near entrance bench.",
     contact: "security@svgptc.edu",
     date: new Date(Date.now() - 3600000 * 48).toISOString().split('T')[0],
     createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-    image: null,
-    coords: { lat: 13.6280, lng: 79.4185 }
+    image: null
   },
   {
     id: "seed_5",
@@ -124,12 +117,11 @@ const SEED_ITEMS = [
     status: "returned",
     collegeName: "SVGPTC Tirupati",
     location: "Mechanical Workshop Block",
-    description: "Standard textbook with notes inside. Reunited with owner through CampusFind!",
+    description: "Standard textbook with notes inside. Reunited with 2nd year student through CampusFind!",
     contact: "akhil@gmail.com",
     date: new Date(Date.now() - 3600000 * 72).toISOString().split('T')[0],
     createdAt: new Date(Date.now() - 3600000 * 72).toISOString(),
-    image: null,
-    coords: { lat: 13.6275, lng: 79.4190 }
+    image: null
   },
   {
     id: "seed_6",
@@ -142,54 +134,86 @@ const SEED_ITEMS = [
     contact: "8877665544",
     date: new Date(Date.now() - 3600000 * 18).toISOString().split('T')[0],
     createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
-    image: null,
-    coords: { lat: 13.6358, lng: 79.4042 }
+    image: null
   }
 ];
 
 // ==================== STATE ====================
 let allItems = [];
-let currentFilters = { search: '', category: 'all', status: 'all', college: 'all' };
+let selectedCollege = null; // null = discovery / all campuses view
+let selectedZone = 'all';    // 'all' or building/zone filter
+let currentFilters = { search: '', category: 'all', status: 'all' };
 let currentUploadedImageData = null;
-
-let map = null;
-let markersLayer = null;
-let userLocationMarker = null;
 
 // ==================== DOM ELEMENTS ====================
 const elements = {
   themeToggle: document.getElementById('themeToggle'),
   mobileMenuBtn: document.getElementById('mobileMenuBtn'),
   navLinks: document.getElementById('navLinks'),
+  navBrandLogo: document.getElementById('navBrandLogo'),
+  navHomeLink: document.getElementById('navHomeLink'),
+  navItemsLink: document.getElementById('navItemsLink'),
+  navCollegeIndicator: document.getElementById('navCollegeIndicator'),
+  navCollegeName: document.getElementById('navCollegeName'),
+  navSwitchCollegeBtn: document.getElementById('navSwitchCollegeBtn'),
   storageStatusPill: document.getElementById('storageStatusPill'),
   storageStatusText: document.getElementById('storageStatusText'),
-  heroSearchInput: document.getElementById('heroSearchInput'),
-  heroCollegeSearch: document.getElementById('heroCollegeSearch'),
-  mapCollegeSearch: document.getElementById('mapCollegeSearch'),
-  detectLocationBtn: document.getElementById('detectLocationBtn'),
-  locationStatus: document.getElementById('locationStatus'),
-  itemsGrid: document.getElementById('itemsGrid'),
-  emptyState: document.getElementById('emptyState'),
-  recoveredScroll: document.getElementById('recoveredScroll'),
-  reportModalOverlay: document.getElementById('reportModalOverlay'),
-  reportForm: document.getElementById('reportForm'),
-  submitReportBtn: document.getElementById('submitReportBtn'),
-  toastContainer: document.getElementById('toastContainer'),
+  heroReportBtn: document.getElementById('heroReportBtn'),
+  navReportBtn: document.getElementById('navReportBtn'),
+
+  // Campus Selector (View 1)
+  campusSelectorSection: document.getElementById('campusSelectorSection'),
+  collegeSearchInput: document.getElementById('collegeSearchInput'),
+  collegeCardsGrid: document.getElementById('collegeCardsGrid'),
+  collegesCountBadge: document.getElementById('collegesCountBadge'),
+
+  // Campus Hub (View 2)
+  campusHubSection: document.getElementById('campusHubSection'),
+  backToCampusesBtn: document.getElementById('backToCampusesBtn'),
+  shareHubBtn: document.getElementById('shareHubBtn'),
+  hubCollegeTitle: document.getElementById('hubCollegeTitle'),
+  hubLostCount: document.getElementById('hubLostCount'),
+  hubFoundCount: document.getElementById('hubFoundCount'),
+  hubReturnedCount: document.getElementById('hubReturnedCount'),
+  hubReportLostBtn: document.getElementById('hubReportLostBtn'),
+  hubReportFoundBtn: document.getElementById('hubReportFoundBtn'),
+  zonePills: document.querySelectorAll('.zone-pill'),
+
+  // Filters & Items
   searchInput: document.getElementById('searchInput'),
   filterCategory: document.getElementById('filterCategory'),
   filterStatus: document.getElementById('filterStatus'),
-  filterCollege: document.getElementById('filterCollege'),
   clearFilters: document.getElementById('clearFilters'),
   activeFilters: document.getElementById('activeFilters'),
+  itemsSectionTitle: document.getElementById('itemsSectionTitle'),
   refreshItemsBtn: document.getElementById('refreshItemsBtn'),
+  itemsGrid: document.getElementById('itemsGrid'),
+  emptyState: document.getElementById('emptyState'),
+  emptyStateHeading: document.getElementById('emptyStateHeading'),
+  emptyStateText: document.getElementById('emptyStateText'),
+  emptyReportBtn: document.getElementById('emptyReportBtn'),
+  recoveredScroll: document.getElementById('recoveredScroll'),
+
+  // Modals & Forms
+  reportModalOverlay: document.getElementById('reportModalOverlay'),
+  reportModalTitle: document.getElementById('reportModalTitle'),
+  reportForm: document.getElementById('reportForm'),
+  reportCollegeName: document.getElementById('reportCollegeName'),
+  submitReportBtn: document.getElementById('submitReportBtn'),
+  closeReportModal: document.getElementById('closeReportModal'),
   detailModalOverlay: document.getElementById('detailModalOverlay'),
   detailModalBody: document.getElementById('detailModalBody'),
   closeDetailModal: document.getElementById('closeDetailModal'),
+  toastContainer: document.getElementById('toastContainer'),
+
+  // Image Upload
   itemImage: document.getElementById('itemImage'),
   uploadPlaceholder: document.getElementById('uploadPlaceholder'),
   previewContainer: document.getElementById('previewContainer'),
   uploadPreview: document.getElementById('uploadPreview'),
   removeImgBtn: document.getElementById('removeImgBtn'),
+
+  // Stats
   stats: {
     lost: document.getElementById('statLost'),
     found: document.getElementById('statFound'),
@@ -287,7 +311,6 @@ function getLocalItems() {
   } catch (e) {
     console.error("Error reading localStorage:", e);
   }
-  // Initialize with seed items
   localStorage.setItem('campusfind_items', JSON.stringify(SEED_ITEMS));
   return SEED_ITEMS;
 }
@@ -301,7 +324,7 @@ function saveLocalItems(items) {
 }
 
 async function loadItems() {
-  // Step 1: Render cached/local items immediately to avoid empty layout
+  // Step 1: Render local items immediately
   allItems = getLocalItems();
   renderAll();
 
@@ -321,7 +344,7 @@ async function loadItems() {
       renderAll();
       return;
     } catch (error) {
-      console.warn("Firestore access error (falling back to LocalStorage):", error.message);
+      console.warn("Firestore access offline/restricted:", error.message);
       isCloudActive = false;
       updateConnectionStatus('local');
     }
@@ -340,29 +363,25 @@ async function submitReport(e) {
   btnLoader.style.display = 'inline';
   btn.disabled = true;
 
-  const collegeName = document.getElementById('reportCollegeName').value.trim();
-  const coords = COLLEGE_COORDS[collegeName] || { lat: 13.6288, lng: 79.4192 };
+  const college = elements.reportCollegeName.value.trim();
 
   const newItem = {
     id: 'cf_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
     name: document.getElementById('itemName').value.trim(),
     category: document.getElementById('reportCategory').value,
     status: document.getElementById('reportStatus').value,
-    collegeName: collegeName,
+    collegeName: college,
     location: document.getElementById('reportLocation').value.trim(),
     description: document.getElementById('reportDescription').value.trim(),
     contact: document.getElementById('reportContact').value.trim(),
     date: document.getElementById('reportDate').value,
     createdAt: new Date().toISOString(),
-    image: currentUploadedImageData,
-    coords: coords
+    image: currentUploadedImageData
   };
 
-  // Save to LocalStorage immediately
   allItems.unshift(newItem);
   saveLocalItems(allItems);
 
-  // Attempt Cloud Firestore Sync
   if (isCloudActive && db) {
     try {
       const cloudPayload = { ...newItem, createdAt: serverTimestamp() };
@@ -374,11 +393,17 @@ async function submitReport(e) {
     }
   }
 
-  // Reset form & UI
   elements.reportForm.reset();
   resetImageUpload();
   closeReportModal();
-  renderAll();
+
+  // If reporting inside a college, stay in that college
+  if (!selectedCollege) {
+    selectCollege(college, true);
+  } else {
+    renderAll();
+  }
+
   showToast('✅ Report submitted successfully!');
 
   btnText.style.display = 'inline';
@@ -393,7 +418,7 @@ async function markReturned(itemId) {
   item.status = 'returned';
   saveLocalItems(allItems);
   renderAll();
-  showToast('🎉 Item marked as returned!');
+  showToast('🎉 Item marked as reunited!');
 
   if (isCloudActive && db) {
     try {
@@ -420,6 +445,139 @@ async function deleteReport(itemId) {
       console.warn("Could not delete from cloud:", e.message);
     }
   }
+}
+
+// ==================== CAMPUS SELECTOR & ROUTING ====================
+function getAllColleges() {
+  const customNames = [...new Set(allItems.map(i => i.collegeName).filter(Boolean))];
+  const list = [...POPULAR_COLLEGES];
+
+  customNames.forEach(cName => {
+    if (!list.some(p => p.name.toLowerCase() === cName.toLowerCase())) {
+      list.push({
+        name: cName,
+        subtitle: "Campus Hub",
+        icon: "🏛️",
+        city: "College Campus"
+      });
+    }
+  });
+
+  return list;
+}
+
+function renderCampusCards(searchTerm = '') {
+  const grid = elements.collegeCardsGrid;
+  const colleges = getAllColleges();
+  const term = searchTerm.toLowerCase();
+
+  const filtered = colleges.filter(c =>
+    c.name.toLowerCase().includes(term) ||
+    c.subtitle.toLowerCase().includes(term) ||
+    c.city.toLowerCase().includes(term)
+  );
+
+  elements.collegesCountBadge.textContent = `${filtered.length} Campuses Available`;
+  grid.innerHTML = '';
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 30px; background: var(--surface); border-radius: var(--radius);">
+        <p style="margin-bottom: 12px; color: var(--text-secondary);">College "${escapeHtml(searchTerm)}" not found yet.</p>
+        <button class="btn btn-primary btn-sm" id="createCollegeHubBtn">
+          🏛️ Create "${escapeHtml(searchTerm)}" Hub & Report Item
+        </button>
+      </div>`;
+
+    document.getElementById('createCollegeHubBtn')?.addEventListener('click', () => {
+      selectCollege(searchTerm, true);
+      openReportModal('lost');
+    });
+    return;
+  }
+
+  filtered.forEach(col => {
+    const colItems = allItems.filter(i => i.collegeName && i.collegeName.toLowerCase() === col.name.toLowerCase());
+    const count = colItems.length;
+
+    const card = document.createElement('div');
+    card.className = 'college-card';
+    card.innerHTML = `
+      <div class="college-card-header">
+        <div class="college-card-icon">${col.icon || '🏛️'}</div>
+        <div>
+          <div class="college-card-name">${escapeHtml(col.name)}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(col.subtitle)}</div>
+        </div>
+      </div>
+      <div class="college-card-meta">
+        <span>📍 ${escapeHtml(col.city)}</span>
+        <span class="college-card-badge ${count > 0 ? 'has-items' : ''}">
+          ${count} ${count === 1 ? 'Report' : 'Reports'}
+        </span>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      selectCollege(col.name, true);
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+function selectCollege(collegeName, updateHash = true) {
+  if (!collegeName) return;
+  selectedCollege = collegeName;
+  selectedZone = 'all';
+
+  if (updateHash) {
+    window.location.hash = '#college=' + encodeURIComponent(collegeName);
+  }
+
+  // Switch to Hub View
+  elements.campusSelectorSection.style.display = 'none';
+  elements.campusHubSection.style.display = 'block';
+  elements.navCollegeIndicator.style.display = 'flex';
+  elements.navCollegeName.textContent = selectedCollege;
+  elements.hubCollegeTitle.textContent = selectedCollege;
+
+  // Reset zone pills
+  elements.zonePills.forEach(pill => {
+    pill.classList.toggle('active', pill.dataset.zone === 'all');
+  });
+
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(`🏛️ Welcome to ${selectedCollege} Campus Hub`);
+}
+
+function exitCollegeHub(updateHash = true) {
+  selectedCollege = null;
+  selectedZone = 'all';
+
+  if (updateHash) {
+    window.location.hash = '';
+  }
+
+  elements.campusSelectorSection.style.display = 'block';
+  elements.campusHubSection.style.display = 'none';
+  elements.navCollegeIndicator.style.display = 'none';
+
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function checkUrlHash() {
+  const hash = window.location.hash;
+  if (hash.startsWith('#college=')) {
+    const cName = decodeURIComponent(hash.replace('#college=', ''));
+    if (cName) {
+      selectCollege(cName, false);
+      return;
+    }
+  }
+  exitCollegeHub(false);
 }
 
 // ==================== IMAGE COMPRESSION ====================
@@ -466,6 +624,23 @@ function resetImageUpload() {
 // ==================== RENDERING ====================
 function getFilteredItems() {
   return allItems.filter(item => {
+    // 1. College restriction
+    if (selectedCollege) {
+      const matchCol = item.collegeName && item.collegeName.toLowerCase() === selectedCollege.toLowerCase();
+      if (!matchCol) return false;
+    }
+
+    // 2. Campus Zone filter
+    if (selectedZone !== 'all') {
+      const zoneKey = selectedZone.toLowerCase();
+      const locText = (item.location || '').toLowerCase();
+      const descText = (item.description || '').toLowerCase();
+      if (!locText.includes(zoneKey) && !descText.includes(zoneKey)) {
+        return false;
+      }
+    }
+
+    // 3. Search text
     const term = currentFilters.search.toLowerCase();
     const matchSearch = !term ||
       (item.name && item.name.toLowerCase().includes(term)) ||
@@ -473,11 +648,11 @@ function getFilteredItems() {
       (item.location && item.location.toLowerCase().includes(term)) ||
       (item.collegeName && item.collegeName.toLowerCase().includes(term));
 
+    // 4. Category & Status
     const matchCategory = currentFilters.category === 'all' || item.category === currentFilters.category;
     const matchStatus = currentFilters.status === 'all' || item.status === currentFilters.status;
-    const matchCollege = currentFilters.college === 'all' || item.collegeName === currentFilters.college;
 
-    return matchSearch && matchCategory && matchStatus && matchCollege;
+    return matchSearch && matchCategory && matchStatus;
   });
 }
 
@@ -485,8 +660,21 @@ function renderItems() {
   const filtered = getFilteredItems();
   elements.itemsGrid.innerHTML = '';
 
+  if (selectedCollege) {
+    elements.itemsSectionTitle.innerHTML = `<span class="section-icon">📋</span> ${escapeHtml(selectedCollege)} Reports <small style="font-size:0.9rem; color:var(--text-muted); font-weight:400;">(${filtered.length} found)</small>`;
+  } else {
+    elements.itemsSectionTitle.innerHTML = `<span class="section-icon">📋</span> Recent Campus Reports <small style="font-size:0.9rem; color:var(--text-muted); font-weight:400;">(${filtered.length} found)</small>`;
+  }
+
   if (filtered.length === 0) {
     elements.emptyState.style.display = 'block';
+    if (selectedCollege) {
+      elements.emptyStateHeading.textContent = `No reports for ${selectedCollege} matching these filters`;
+      elements.emptyStateText.textContent = `Have you lost or found something here? Be the first to report it!`;
+    } else {
+      elements.emptyStateHeading.textContent = `No reports match your filters`;
+      elements.emptyStateText.textContent = `Try clearing your search or picking a college above.`;
+    }
   } else {
     elements.emptyState.style.display = 'none';
     filtered.forEach(item => {
@@ -514,13 +702,11 @@ function renderItems() {
           </div>
         </div>`;
 
-      // Card click opens detail
       card.addEventListener('click', (e) => {
         if (e.target.closest('.mark-card-btn')) return;
         openDetailModal(item.id);
       });
 
-      // Quick mark returned
       const markBtn = card.querySelector('.mark-card-btn');
       if (markBtn) {
         markBtn.addEventListener('click', (e) => {
@@ -534,7 +720,8 @@ function renderItems() {
   }
 
   // Returned scroll strip
-  const returnedItems = allItems.filter(i => i.status === 'returned').slice(0, 8);
+  const pool = selectedCollege ? allItems.filter(i => i.collegeName && i.collegeName.toLowerCase() === selectedCollege.toLowerCase()) : allItems;
+  const returnedItems = pool.filter(i => i.status === 'returned').slice(0, 8);
   elements.recoveredScroll.innerHTML = returnedItems.length
     ? returnedItems.map(i => `
         <div class="recovered-card">
@@ -546,37 +733,26 @@ function renderItems() {
 }
 
 function updateStats() {
+  if (selectedCollege) {
+    const colItems = allItems.filter(i => i.collegeName && i.collegeName.toLowerCase() === selectedCollege.toLowerCase());
+    elements.hubLostCount.textContent = colItems.filter(i => i.status === 'lost').length;
+    elements.hubFoundCount.textContent = colItems.filter(i => i.status === 'found').length;
+    elements.hubReturnedCount.textContent = colItems.filter(i => i.status === 'returned').length;
+  }
+
+  // Global stats in discovery screen
   elements.stats.lost.textContent = allItems.filter(i => i.status === 'lost').length;
   elements.stats.found.textContent = allItems.filter(i => i.status === 'found').length;
   elements.stats.returned.textContent = allItems.filter(i => i.status === 'returned').length;
-
   const uniqueColleges = new Set(allItems.map(i => i.collegeName).filter(Boolean));
   elements.stats.colleges.textContent = uniqueColleges.size;
 }
 
-function updateCollegeFilter() {
-  const select = elements.filterCollege;
-  const currentVal = select.value;
-  const unique = [...new Set(allItems.map(i => i.collegeName).filter(Boolean))].sort();
-
-  select.innerHTML = '<option value="all">🏛️ All Colleges</option>';
-  unique.forEach(cName => {
-    const opt = document.createElement('option');
-    opt.value = cName;
-    opt.textContent = cName;
-    select.appendChild(opt);
-  });
-
-  if (unique.includes(currentVal)) {
-    select.value = currentVal;
-  }
-}
-
 function renderActiveFilters() {
   const tags = [];
-  if (currentFilters.college !== 'all') tags.push({ label: `🏛️ ${currentFilters.college}`, key: 'college' });
+  if (selectedZone !== 'all') tags.push({ label: `📍 Zone: ${selectedZone}`, key: 'zone' });
   if (currentFilters.category !== 'all') tags.push({ label: `📂 ${currentFilters.category}`, key: 'category' });
-  if (currentFilters.status !== 'all') tags.push({ label: currentFilters.status === 'lost' ? '🔴 Lost' : currentFilters.status === 'found' ? '🟢 Found' : '🟣 Returned', key: 'status' });
+  if (currentFilters.status !== 'all') tags.push({ label: currentFilters.status === 'lost' ? '🔴 Lost' : currentFilters.status === 'found' ? '🟢 Found' : '🟣 Reunited', key: 'status' });
   if (currentFilters.search) tags.push({ label: `🔍 "${currentFilters.search}"`, key: 'search' });
 
   elements.activeFilters.innerHTML = tags.map(t => `<span class="filter-tag" data-key="${t.key}">${t.label} ✕</span>`).join('');
@@ -584,34 +760,32 @@ function renderActiveFilters() {
   elements.activeFilters.querySelectorAll('.filter-tag').forEach(tag => {
     tag.addEventListener('click', () => {
       const key = tag.dataset.key;
-      if (key === 'college') currentFilters.college = 'all';
-      if (key === 'category') currentFilters.category = 'all';
-      if (key === 'status') currentFilters.status = 'all';
+      if (key === 'zone') {
+        selectedZone = 'all';
+        elements.zonePills.forEach(p => p.classList.toggle('active', p.dataset.zone === 'all'));
+      }
+      if (key === 'category') {
+        currentFilters.category = 'all';
+        elements.filterCategory.value = 'all';
+      }
+      if (key === 'status') {
+        currentFilters.status = 'all';
+        elements.filterStatus.value = 'all';
+      }
       if (key === 'search') {
         currentFilters.search = '';
         elements.searchInput.value = '';
-        elements.heroSearchInput.value = '';
       }
-      updateFiltersUI();
       renderAll();
     });
   });
 }
 
-function updateFiltersUI() {
-  elements.searchInput.value = currentFilters.search;
-  elements.heroSearchInput.value = currentFilters.search;
-  elements.filterCategory.value = currentFilters.category;
-  elements.filterStatus.value = currentFilters.status;
-  elements.filterCollege.value = currentFilters.college;
-}
-
 function renderAll() {
+  renderCampusCards(elements.collegeSearchInput.value);
   renderItems();
   updateStats();
   renderActiveFilters();
-  updateCollegeFilter();
-  updateMapMarkers();
 }
 
 // ==================== DETAIL & CONTACT MODAL ====================
@@ -700,7 +874,6 @@ function openDetailModal(itemId) {
     </div>
   `;
 
-  // Attach button events
   document.getElementById('modalCopyBtn').addEventListener('click', (e) => {
     navigator.clipboard?.writeText(e.target.dataset.contact);
     showToast(`📋 Copied: ${e.target.dataset.contact}`);
@@ -727,15 +900,21 @@ function closeDetailModal() {
   document.body.style.overflow = '';
 }
 
-// ==================== MODALS ====================
+// ==================== REPORT MODAL ====================
 function openReportModal(status = 'lost') {
   document.getElementById('reportStatus').value = status;
-  document.getElementById('reportModalTitle').textContent = status === 'lost' ? '🔴 Report Lost Item' : '🟢 Report Found Item';
-  document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+  elements.reportDate = document.getElementById('reportDate');
+  elements.reportDate.value = new Date().toISOString().split('T')[0];
 
-  // Autofill college if filtered or active
-  if (currentFilters.college !== 'all') {
-    document.getElementById('reportCollegeName').value = currentFilters.college;
+  if (selectedCollege) {
+    elements.reportCollegeName.value = selectedCollege;
+    elements.reportModalTitle.textContent = status === 'lost'
+      ? `🔴 Report Lost in ${selectedCollege}`
+      : `🟢 Report Found in ${selectedCollege}`;
+  } else {
+    elements.reportModalTitle.textContent = status === 'lost'
+      ? '🔴 Report Lost Item'
+      : '🟢 Report Found Item';
   }
 
   elements.reportModalOverlay.classList.add('active');
@@ -745,135 +924,6 @@ function openReportModal(status = 'lost') {
 function closeReportModal() {
   elements.reportModalOverlay.classList.remove('active');
   document.body.style.overflow = '';
-}
-
-// ==================== LEAFLET MAP ====================
-function initLeafletMap() {
-  const mapEl = document.getElementById('map');
-  if (!mapEl) return;
-
-  // Default center: SVGPTC Tirupati / South India
-  const defaultCenter = [13.6288, 79.4192];
-  map = L.map('map', {
-    center: defaultCenter,
-    zoom: 6,
-    scrollWheelZoom: false
-  });
-
-  // Free OpenStreetMap CartoDB Voyager tiles (works in dark and light mode)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://openstreetmap.org">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-  }).addTo(map);
-
-  markersLayer = L.layerGroup().addTo(map);
-  updateMapMarkers();
-}
-
-function updateMapMarkers() {
-  if (!map || !markersLayer) return;
-  markersLayer.clearLayers();
-
-  // Aggregate items by college
-  const collegeMap = {};
-  allItems.forEach(item => {
-    const cName = item.collegeName || 'Unknown College';
-    if (!collegeMap[cName]) {
-      const coords = item.coords || COLLEGE_COORDS[cName] || { lat: 13.6288, lng: 79.4192 };
-      collegeMap[cName] = {
-        name: cName,
-        lat: coords.lat,
-        lng: coords.lng,
-        lost: 0,
-        found: 0,
-        returned: 0,
-        items: []
-      };
-    }
-    if (item.status === 'lost') collegeMap[cName].lost++;
-    else if (item.status === 'found') collegeMap[cName].found++;
-    else if (item.status === 'returned') collegeMap[cName].returned++;
-    collegeMap[cName].items.push(item);
-  });
-
-  // Drop markers
-  Object.values(collegeMap).forEach(col => {
-    const marker = L.circleMarker([col.lat, col.lng], {
-      radius: 9,
-      fillColor: col.lost > col.found ? '#f43f5e' : '#10b981',
-      color: '#ffffff',
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0.85
-    });
-
-    const popupHtml = `
-      <div class="map-popup-card">
-        <h4>🏛️ ${escapeHtml(col.name)}</h4>
-        <p>🔴 <strong>${col.lost}</strong> Lost &nbsp;•&nbsp; 🟢 <strong>${col.found}</strong> Found &nbsp;•&nbsp; 🟣 <strong>${col.returned}</strong> Reunited</p>
-        <button class="btn btn-primary btn-sm filter-map-college-btn" data-college="${escapeHtml(col.name)}">
-          View College Reports
-        </button>
-      </div>`;
-
-    marker.bindPopup(popupHtml);
-    markersLayer.addLayer(marker);
-  });
-
-  // Attach popup click listener
-  map.on('popupopen', () => {
-    document.querySelectorAll('.filter-map-college-btn').forEach(btn => {
-      btn.onclick = () => {
-        const cName = btn.dataset.college;
-        currentFilters.college = cName;
-        updateFiltersUI();
-        renderAll();
-        document.getElementById('items-section').scrollIntoView({ behavior: 'smooth' });
-      };
-    });
-  });
-}
-
-function detectUserLocation() {
-  if (!navigator.geolocation) {
-    elements.locationStatus.textContent = '📍 Geolocation is not supported by your browser.';
-    return;
-  }
-
-  elements.locationStatus.textContent = '📍 Locating your position...';
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude, longitude } = pos.coords;
-      if (userLocationMarker) map.removeLayer(userLocationMarker);
-
-      userLocationMarker = L.marker([latitude, longitude], {
-        title: 'Your Location'
-      }).addTo(map);
-      userLocationMarker.bindPopup('<b>📍 You are here</b>').openPopup();
-
-      map.setView([latitude, longitude], 13);
-      elements.locationStatus.textContent = `📍 Located at [${latitude.toFixed(3)}, ${longitude.toFixed(3)}]. Zoomed to your area.`;
-
-      // Find nearest known college
-      let nearest = null;
-      let minDis = Infinity;
-      Object.entries(COLLEGE_COORDS).forEach(([name, c]) => {
-        const d = Math.hypot(c.lat - latitude, c.lng - longitude);
-        if (d < minDis) {
-          minDis = d;
-          nearest = name;
-        }
-      });
-      if (nearest && minDis < 0.5) {
-        showToast(`🏛️ Nearest campus detected: ${nearest}`);
-        elements.heroCollegeSearch.value = nearest;
-      }
-    },
-    (err) => {
-      elements.locationStatus.textContent = '📍 Location access was denied or unavailable.';
-      showToast('⚠️ Could not access location.');
-    }
-  );
 }
 
 // ==================== EVENT LISTENERS ====================
@@ -891,17 +941,49 @@ function setupListeners() {
     elements.navLinks.classList.toggle('mobile-open');
   });
 
-  // Modal open buttons
-  document.getElementById('heroReportBtn').addEventListener('click', () => openReportModal('lost'));
-  document.getElementById('reportLostHero').addEventListener('click', () => openReportModal('lost'));
-  document.getElementById('reportFoundHero').addEventListener('click', () => openReportModal('found'));
-  document.getElementById('navReportBtn').addEventListener('click', (e) => {
+  // Nav Links
+  elements.navBrandLogo.addEventListener('click', () => exitCollegeHub(true));
+  elements.navHomeLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    exitCollegeHub(true);
+  });
+  elements.navSwitchCollegeBtn.addEventListener('click', () => exitCollegeHub(true));
+  elements.backToCampusesBtn.addEventListener('click', () => exitCollegeHub(true));
+
+  // Share Hub link
+  elements.shareHubBtn.addEventListener('click', () => {
+    const url = window.location.href;
+    navigator.clipboard?.writeText(url);
+    showToast(`🔗 Copied share link for ${selectedCollege}!`);
+  });
+
+  // College search in selector view
+  elements.collegeSearchInput.addEventListener('input', (e) => {
+    renderCampusCards(e.target.value);
+  });
+
+  // Zone Pills
+  elements.zonePills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      elements.zonePills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      selectedZone = pill.dataset.zone;
+      renderAll();
+    });
+  });
+
+  // Report buttons
+  elements.heroReportBtn.addEventListener('click', () => openReportModal('lost'));
+  elements.navReportBtn.addEventListener('click', (e) => {
     e.preventDefault();
     openReportModal('lost');
   });
+  elements.hubReportLostBtn.addEventListener('click', () => openReportModal('lost'));
+  elements.hubReportFoundBtn.addEventListener('click', () => openReportModal('found'));
+  elements.emptyReportBtn.addEventListener('click', () => openReportModal('lost'));
 
   // Close modals
-  document.getElementById('closeReportModal').addEventListener('click', closeReportModal);
+  elements.closeReportModal.addEventListener('click', closeReportModal);
   elements.reportModalOverlay.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeReportModal();
   });
@@ -913,26 +995,11 @@ function setupListeners() {
   // Form submit
   elements.reportForm.addEventListener('submit', submitReport);
 
-  // Search input listeners
-  elements.heroSearchInput.addEventListener('input', (e) => {
-    currentFilters.search = e.target.value;
-    elements.searchInput.value = e.target.value;
-    renderAll();
-  });
+  // Search & Filters
   elements.searchInput.addEventListener('input', (e) => {
     currentFilters.search = e.target.value;
-    elements.heroSearchInput.value = e.target.value;
     renderAll();
   });
-
-  // College hero input
-  elements.heroCollegeSearch.addEventListener('change', (e) => {
-    currentFilters.college = e.target.value.trim() || 'all';
-    elements.filterCollege.value = currentFilters.college;
-    renderAll();
-  });
-
-  // Filter selects
   elements.filterCategory.addEventListener('change', (e) => {
     currentFilters.category = e.target.value;
     renderAll();
@@ -941,45 +1008,23 @@ function setupListeners() {
     currentFilters.status = e.target.value;
     renderAll();
   });
-  elements.filterCollege.addEventListener('change', (e) => {
-    currentFilters.college = e.target.value;
-    elements.heroCollegeSearch.value = e.target.value === 'all' ? '' : e.target.value;
-    renderAll();
-  });
-
-  // Clear filters
   elements.clearFilters.addEventListener('click', () => {
-    currentFilters = { search: '', category: 'all', status: 'all', college: 'all' };
-    updateFiltersUI();
-    elements.heroCollegeSearch.value = '';
+    currentFilters = { search: '', category: 'all', status: 'all' };
+    selectedZone = 'all';
+    elements.searchInput.value = '';
+    elements.filterCategory.value = 'all';
+    elements.filterStatus.value = 'all';
+    elements.zonePills.forEach(p => p.classList.toggle('active', p.dataset.zone === 'all'));
     renderAll();
     showToast('🔄 Filters reset');
   });
 
-  // Refresh items
-  if (elements.refreshItemsBtn) {
-    elements.refreshItemsBtn.addEventListener('click', () => {
-      loadItems();
-      showToast('🔄 Reports refreshed');
-    });
-  }
-
-  // Map College Search
-  elements.mapCollegeSearch.addEventListener('change', (e) => {
-    const val = e.target.value.trim();
-    if (COLLEGE_COORDS[val]) {
-      const c = COLLEGE_COORDS[val];
-      map.setView([c.lat, c.lng], 14);
-      currentFilters.college = val;
-      updateFiltersUI();
-      renderAll();
-    }
+  elements.refreshItemsBtn.addEventListener('click', () => {
+    loadItems();
+    showToast('🔄 Reports refreshed');
   });
 
-  // Detect location
-  elements.detectLocationBtn.addEventListener('click', detectUserLocation);
-
-  // Image Upload Handling
+  // Image Upload
   elements.itemImage.addEventListener('change', function() {
     if (this.files && this.files[0]) {
       handleImageSelect(this.files[0]);
@@ -990,29 +1035,8 @@ function setupListeners() {
     resetImageUpload();
   });
 
-  // Drag and drop image
-  const dropZone = document.getElementById('imageUploadZone');
-  dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.style.borderColor = 'var(--accent)';
-  });
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.style.borderColor = 'var(--border)';
-  });
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.style.borderColor = 'var(--border)';
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleImageSelect(e.dataTransfer.files[0]);
-    }
-  });
-
-  // Close mobile nav on outside click
-  document.addEventListener('click', (e) => {
-    if (!elements.navLinks.contains(e.target) && e.target !== elements.mobileMenuBtn) {
-      elements.navLinks.classList.remove('mobile-open');
-    }
-  });
+  // Hash route changes (e.g. back button in browser)
+  window.addEventListener('hashchange', checkUrlHash);
 }
 
 // ==================== APP INITIALIZATION ====================
@@ -1021,6 +1045,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.setAttribute('data-theme', savedTheme);
 
   setupListeners();
-  initLeafletMap();
   loadItems();
+  checkUrlHash();
 });

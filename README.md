@@ -1,9 +1,9 @@
 # 🎓 CampusFind — College Lost & Found Platform
 
-> An intuitive, student-centric Lost & Found web platform for college campuses with interactive geo-mapping, category filtering, instant WhatsApp/Call contact, and resilient dual storage (Firebase Firestore + LocalStorage fallback).
+> An intuitive, student-centric Lost & Found web platform for college campuses with dedicated College Campus Hubs (e.g. **SVGPTC Tirupati**), campus building/zone filters, instant WhatsApp/Call contact, and resilient dual storage (Firebase Firestore + LocalStorage fallback).
 
 [![Tech Stack](https://img.shields.io/badge/Stack-HTML5%20%7C%20CSS3%20%7C%20Vanilla%20JS-blue)](#)
-[![Map](https://img.shields.io/badge/Maps-Leaflet%20%7C%20OpenStreetMap-brightgreen)](#)
+[![Campus Hubs](https://img.shields.io/badge/Hubs-SVGPTC%20%7C%20SVU%20%7C%20IIT%20%7C%20NIT-brightgreen)](#)
 [![Database](https://img.shields.io/badge/Database-Firebase%20Firestore%20%2B%20Offline%20Cache-orange)](#)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey)](#)
 
@@ -11,8 +11,13 @@
 
 ## ✨ Features
 
-- 🗺️ **Interactive Campus Mapping:** Powered by **Leaflet.js & OpenStreetMap** (100% free, zero external API keys needed). View lost/found items clustered around specific colleges and campuses.
-- 📍 **Geolocation Detection:** Automatically detects nearby college campuses using the browser's built-in `navigator.geolocation` API.
+- 🏛️ **College-First Campus Hubs:**
+  - Select your college (e.g. **SVGPTC Tirupati**) to enter a dedicated campus dashboard showing only your college's lost & found reports.
+  - Quick-switch or search any college anytime.
+- 🔗 **Shareable WhatsApp Campus Links:**
+  - Direct URL routing (e.g. `#college=SVGPTC%20Tirupati`) allows students to share their college hub directly in college WhatsApp and Telegram groups.
+- 🏢 **Campus Zone & Department Filters:**
+  - Filter items inside your college by: **Library**, **Computer Labs**, **Canteen**, **Workshops**, **Main Gate / Security**, **Seminar Halls**.
 - ⚡ **Resilient Dual Storage Engine:**
   - Connects to **Firebase Firestore** for cloud sync across devices.
   - Automatically falls back to **LocalStorage** with pre-seeded college items if offline or if cloud permissions are restricted, ensuring the app **never shows a blank screen**.
@@ -65,7 +70,7 @@ service cloud.firestore {
 ## 🛠️ Tech Stack
 
 - **Frontend:** Semantic HTML5, Glassmorphism CSS3, Vanilla ES6+ JavaScript (Mobile-first)
-- **Map & Geocoding:** Leaflet.js, OpenStreetMap CartoDB Voyager tiles
+- **Architecture:** College-First Campus Hub routing via URL hash
 - **Cloud Database:** Firebase Firestore 12.x
 - **Icons & Visuals:** Modern system emojis & SVG icons
 - **Storage:** Dual-engine Firestore + LocalStorage fallback
