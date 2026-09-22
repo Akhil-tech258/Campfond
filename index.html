@@ -56,21 +56,45 @@
         <section class="campus-selector-section" id="campusSelectorSection">
             <div class="hero">
                 <h1>Lost Something on <span class="highlight">Campus?</span></h1>
-                <p>Select your college to enter your dedicated campus hub and browse lost & found items.</p>
+                <p>Select your college to enter your dedicated campus hub, or add your college if it's new!</p>
                 
-                <div class="college-search-wrapper">
-                    <span class="search-icon-inline">🏛️</span>
-                    <input type="text" id="collegeSearchInput" placeholder="Search your college (e.g. SVGPTC, SVU, IIT, etc.)...">
+                <!-- Impressive Hero Search Box -->
+                <div class="college-search-box-container">
+                    <div class="college-search-bar" id="collegeSearchBar">
+                        <span class="search-main-icon">🏛️</span>
+                        <input type="text" id="collegeSearchInput" placeholder="Type your college name (e.g. SVGPTC, SVU, IIT, NIT...)" autocomplete="off">
+                        <button type="button" class="btn-clear-search" id="clearCollegeSearchBtn" style="display:none;" title="Clear search">✕</button>
+                        <button type="button" class="btn btn-primary btn-sm btn-add-college-trigger" id="openAddCollegeBtn">
+                            + Add College
+                        </button>
+                    </div>
+                    
+                    <!-- Floating Live Suggestions Dropdown -->
+                    <div class="college-suggestions-dropdown" id="collegeSuggestionsDropdown" style="display:none;"></div>
+                </div>
+
+                <!-- Campus Category Filter Chips -->
+                <div class="campus-category-chips" id="campusCategoryChips">
+                    <button class="chip active" data-type="all">All Campuses</button>
+                    <button class="chip" data-type="polytechnic">🏛️ Polytechnics</button>
+                    <button class="chip" data-type="university">🎓 Universities</button>
+                    <button class="chip" data-type="active">⚡ Most Active</button>
                 </div>
             </div>
 
             <!-- Popular Campus Cards Grid -->
             <div class="campus-grid-header">
-                <h3>Select Your Campus</h3>
-                <span class="text-muted" id="collegesCountBadge">Showing colleges</span>
+                <div>
+                    <h3>Select Your Campus</h3>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">Click a card to enter that college's dedicated lost & found portal</p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span class="colleges-count-pill" id="collegesCountBadge">Showing colleges</span>
+                    <button class="btn btn-outline btn-sm" id="headerAddCollegeBtn">+ Add My College</button>
+                </div>
             </div>
             <div class="college-cards-grid" id="collegeCardsGrid">
-                <!-- Dynamically generated college cards -->
+                <!-- Dynamically generated college cards + Add College card -->
             </div>
 
             <!-- Global Quick Stats -->
@@ -301,6 +325,48 @@
         <div class="modal modal-lg" id="detailModal">
             <button class="close-btn" id="closeDetailModal" aria-label="Close">✕</button>
             <div id="detailModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Add College Modal -->
+    <div class="modal-overlay" id="addCollegeModalOverlay">
+        <div class="modal" id="addCollegeModal">
+            <button class="close-btn" id="closeAddCollegeModal" aria-label="Close">✕</button>
+            <h2>🏛️ Add Your College Campus</h2>
+            <p class="modal-subtitle">Can't find your college? Add it here to create a dedicated campus lost & found portal for your college!</p>
+            <form id="addCollegeForm">
+                <div class="form-group">
+                    <label for="newCollegeName">College Full Name *</label>
+                    <input type="text" id="newCollegeName" placeholder="e.g. Govt Polytechnic for Women, Tirupati" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newCollegeSubtitle">Short Name / Category</label>
+                        <input type="text" id="newCollegeSubtitle" placeholder="e.g. Polytechnic / Engineering / Degree">
+                    </div>
+                    <div class="form-group">
+                        <label for="newCollegeCity">City / Location *</label>
+                        <input type="text" id="newCollegeCity" placeholder="e.g. Tirupati, Andhra Pradesh" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Choose Campus Icon / Emoji</label>
+                    <div class="icon-selector" id="iconSelector">
+                        <button type="button" class="icon-btn active" data-icon="🏛️">🏛️</button>
+                        <button type="button" class="icon-btn" data-icon="🎓">🎓</button>
+                        <button type="button" class="icon-btn" data-icon="🔬">🔬</button>
+                        <button type="button" class="icon-btn" data-icon="⚡">⚡</button>
+                        <button type="button" class="icon-btn" data-icon="💻">💻</button>
+                        <button type="button" class="icon-btn" data-icon="📚">📚</button>
+                        <button type="button" class="icon-btn" data-icon="🎨">🎨</button>
+                        <button type="button" class="icon-btn" data-icon="🏥">🏥</button>
+                    </div>
+                    <input type="hidden" id="newCollegeIcon" value="🏛️">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="submitNewCollegeBtn">
+                    <span>🚀 Create Campus Hub & Enter</span>
+                </button>
+            </form>
         </div>
     </div>
 

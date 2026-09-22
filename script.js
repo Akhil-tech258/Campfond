@@ -2,6 +2,7 @@
    CAMPUSFIND — script.js
    College Lost & Found Platform
    Dedicated College Hub & Campus-First Architecture
+   Interactive Live Autocomplete & Add-College System
    Resilient Dual Engine: Firebase Firestore + LocalStorage Fallback
    ============================================================ */
 
@@ -42,18 +43,18 @@ try {
   console.warn("Firebase initialization skipped/offline:", err);
 }
 
-// ==================== POPULAR COLLEGES DATABASE ====================
+// ==================== DEFAULT POPULAR COLLEGES ====================
 const POPULAR_COLLEGES = [
-  { name: "SVGPTC Tirupati", subtitle: "Sri Venkateswara Govt Polytechnic", icon: "🏛️", city: "Tirupati, AP" },
-  { name: "Sri Venkateswara University (SVU), Tirupati", subtitle: "SVU Campus", icon: "🎓", city: "Tirupati, AP" },
-  { name: "IIT Madras", subtitle: "Indian Institute of Technology", icon: "🔬", city: "Chennai, TN" },
-  { name: "IIT Bombay", subtitle: "Indian Institute of Technology", icon: "🚀", city: "Mumbai, MH" },
-  { name: "IIT Delhi", subtitle: "Indian Institute of Technology", icon: "💻", city: "New Delhi" },
-  { name: "NIT Trichy", subtitle: "National Institute of Technology", icon: "⚙️", city: "Tiruchirappalli, TN" },
-  { name: "NIT Warangal", subtitle: "National Institute of Technology", icon: "⚡", city: "Warangal, TS" },
-  { name: "Anna University, Chennai", subtitle: "CEG Campus", icon: "📚", city: "Chennai, TN" },
-  { name: "JNTU Anantapur", subtitle: "College of Engineering", icon: "🏗️", city: "Anantapur, AP" },
-  { name: "VIT Vellore", subtitle: "Vellore Institute of Technology", icon: "🌐", city: "Vellore, TN" }
+  { name: "SVGPTC Tirupati", subtitle: "Sri Venkateswara Govt Polytechnic", icon: "🏛️", city: "Tirupati, AP", type: "polytechnic" },
+  { name: "Sri Venkateswara University (SVU), Tirupati", subtitle: "SVU Campus", icon: "🎓", city: "Tirupati, AP", type: "university" },
+  { name: "IIT Madras", subtitle: "Indian Institute of Technology", icon: "🔬", city: "Chennai, TN", type: "university" },
+  { name: "IIT Bombay", subtitle: "Indian Institute of Technology", icon: "🚀", city: "Mumbai, MH", type: "university" },
+  { name: "IIT Delhi", subtitle: "Indian Institute of Technology", icon: "💻", city: "New Delhi", type: "university" },
+  { name: "NIT Trichy", subtitle: "National Institute of Technology", icon: "⚙️", city: "Tiruchirappalli, TN", type: "university" },
+  { name: "NIT Warangal", subtitle: "National Institute of Technology", icon: "⚡", city: "Warangal, TS", type: "university" },
+  { name: "Anna University, Chennai", subtitle: "CEG Campus", icon: "📚", city: "Chennai, TN", type: "university" },
+  { name: "JNTU Anantapur", subtitle: "College of Engineering", icon: "🏗️", city: "Anantapur, AP", type: "university" },
+  { name: "VIT Vellore", subtitle: "Vellore Institute of Technology", icon: "🌐", city: "Vellore, TN", type: "university" }
 ];
 
 // ==================== REALISTIC SAMPLE DATA ====================
@@ -142,6 +143,7 @@ const SEED_ITEMS = [
 let allItems = [];
 let selectedCollege = null; // null = discovery / all campuses view
 let selectedZone = 'all';    // 'all' or building/zone filter
+let activeCollegeFilterType = 'all'; // 'all', 'polytechnic', 'university', 'active'
 let currentFilters = { search: '', category: 'all', status: 'all' };
 let currentUploadedImageData = null;
 
@@ -164,6 +166,11 @@ const elements = {
   // Campus Selector (View 1)
   campusSelectorSection: document.getElementById('campusSelectorSection'),
   collegeSearchInput: document.getElementById('collegeSearchInput'),
+  clearCollegeSearchBtn: document.getElementById('clearCollegeSearchBtn'),
+  collegeSuggestionsDropdown: document.getElementById('collegeSuggestionsDropdown'),
+  openAddCollegeBtn: document.getElementById('openAddCollegeBtn'),
+  headerAddCollegeBtn: document.getElementById('headerAddCollegeBtn'),
+  campusCategoryChips: document.getElementById('campusCategoryChips'),
   collegeCardsGrid: document.getElementById('collegeCardsGrid'),
   collegesCountBadge: document.getElementById('collegesCountBadge'),
 
@@ -205,6 +212,16 @@ const elements = {
   detailModalBody: document.getElementById('detailModalBody'),
   closeDetailModal: document.getElementById('closeDetailModal'),
   toastContainer: document.getElementById('toastContainer'),
+
+  // Add College Modal
+  addCollegeModalOverlay: document.getElementById('addCollegeModalOverlay'),
+  closeAddCollegeModal: document.getElementById('closeAddCollegeModal'),
+  addCollegeForm: document.getElementById('addCollegeForm'),
+  newCollegeName: document.getElementById('newCollegeName'),
+  newCollegeSubtitle: document.getElementById('newCollegeSubtitle'),
+  newCollegeCity: document.getElementById('newCollegeCity'),
+  newCollegeIcon: document.getElementById('newCollegeIcon'),
+  iconButtons: document.querySelectorAll('.icon-btn'),
 
   // Image Upload
   itemImage: document.getElementById('itemImage'),
@@ -323,6 +340,23 @@ function saveLocalItems(items) {
   }
 }
 
+function getCustomColleges() {
+  try {
+    const raw = localStorage.getItem('campusfind_custom_colleges');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {}
+  return [];
+}
+
+function saveCustomColleges(list) {
+  try {
+    localStorage.setItem('campusfind_custom_colleges', JSON.stringify(list));
+  } catch (e) {}
+}
+
 async function loadItems() {
   // Step 1: Render local items immediately
   allItems = getLocalItems();
@@ -397,7 +431,6 @@ async function submitReport(e) {
   resetImageUpload();
   closeReportModal();
 
-  // If reporting inside a college, stay in that college
   if (!selectedCollege) {
     selectCollege(college, true);
   } else {
@@ -447,18 +480,28 @@ async function deleteReport(itemId) {
   }
 }
 
-// ==================== CAMPUS SELECTOR & ROUTING ====================
+// ==================== CAMPUS DIRECTORY & ADD COLLEGE ====================
 function getAllColleges() {
-  const customNames = [...new Set(allItems.map(i => i.collegeName).filter(Boolean))];
+  const custom = getCustomColleges();
   const list = [...POPULAR_COLLEGES];
 
-  customNames.forEach(cName => {
+  // Add custom colleges
+  custom.forEach(c => {
+    if (!list.some(p => p.name.toLowerCase() === c.name.toLowerCase())) {
+      list.push(c);
+    }
+  });
+
+  // Also include any colleges appearing in reported items
+  const itemColleges = [...new Set(allItems.map(i => i.collegeName).filter(Boolean))];
+  itemColleges.forEach(cName => {
     if (!list.some(p => p.name.toLowerCase() === cName.toLowerCase())) {
       list.push({
         name: cName,
         subtitle: "Campus Hub",
         icon: "🏛️",
-        city: "College Campus"
+        city: "College Campus",
+        type: cName.toLowerCase().includes('polytechnic') ? 'polytechnic' : 'university'
       });
     }
   });
@@ -466,36 +509,42 @@ function getAllColleges() {
   return list;
 }
 
-function renderCampusCards(searchTerm = '') {
+function renderCampusCards(searchTerm = '', filterType = activeCollegeFilterType) {
   const grid = elements.collegeCardsGrid;
   const colleges = getAllColleges();
   const term = searchTerm.toLowerCase();
 
-  const filtered = colleges.filter(c =>
+  let filtered = colleges.filter(c =>
     c.name.toLowerCase().includes(term) ||
-    c.subtitle.toLowerCase().includes(term) ||
-    c.city.toLowerCase().includes(term)
+    (c.subtitle && c.subtitle.toLowerCase().includes(term)) ||
+    (c.city && c.city.toLowerCase().includes(term))
   );
 
-  elements.collegesCountBadge.textContent = `${filtered.length} Campuses Available`;
-  grid.innerHTML = '';
-
-  if (filtered.length === 0) {
-    grid.innerHTML = `
-      <div style="grid-column: 1/-1; text-align: center; padding: 30px; background: var(--surface); border-radius: var(--radius);">
-        <p style="margin-bottom: 12px; color: var(--text-secondary);">College "${escapeHtml(searchTerm)}" not found yet.</p>
-        <button class="btn btn-primary btn-sm" id="createCollegeHubBtn">
-          🏛️ Create "${escapeHtml(searchTerm)}" Hub & Report Item
-        </button>
-      </div>`;
-
-    document.getElementById('createCollegeHubBtn')?.addEventListener('click', () => {
-      selectCollege(searchTerm, true);
-      openReportModal('lost');
-    });
-    return;
+  // Apply chip category filter
+  if (filterType === 'polytechnic') {
+    filtered = filtered.filter(c =>
+      c.type === 'polytechnic' ||
+      c.name.toLowerCase().includes('polytechnic') ||
+      c.name.toLowerCase().includes('gptc')
+    );
+  } else if (filterType === 'university') {
+    filtered = filtered.filter(c =>
+      c.type === 'university' ||
+      c.name.toLowerCase().includes('university') ||
+      c.name.toLowerCase().includes('iit') ||
+      c.name.toLowerCase().includes('nit') ||
+      c.name.toLowerCase().includes('institute')
+    );
+  } else if (filterType === 'active') {
+    filtered = filtered.filter(c =>
+      allItems.some(i => i.collegeName && i.collegeName.toLowerCase() === c.name.toLowerCase())
+    );
   }
 
+  elements.collegesCountBadge.textContent = `${filtered.length} Campuses`;
+  grid.innerHTML = '';
+
+  // Render cards
   filtered.forEach(col => {
     const colItems = allItems.filter(i => i.collegeName && i.collegeName.toLowerCase() === col.name.toLowerCase());
     const count = colItems.length;
@@ -507,11 +556,11 @@ function renderCampusCards(searchTerm = '') {
         <div class="college-card-icon">${col.icon || '🏛️'}</div>
         <div>
           <div class="college-card-name">${escapeHtml(col.name)}</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(col.subtitle)}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(col.subtitle || 'Campus')}</div>
         </div>
       </div>
       <div class="college-card-meta">
-        <span>📍 ${escapeHtml(col.city)}</span>
+        <span>📍 ${escapeHtml(col.city || 'Campus')}</span>
         <span class="college-card-badge ${count > 0 ? 'has-items' : ''}">
           ${count} ${count === 1 ? 'Report' : 'Reports'}
         </span>
@@ -524,8 +573,150 @@ function renderCampusCards(searchTerm = '') {
 
     grid.appendChild(card);
   });
+
+  // Always append the persistent "+ Add Your College" card
+  const addCard = document.createElement('div');
+  addCard.className = 'college-card add-college-card';
+  addCard.innerHTML = `
+    <div class="add-card-icon">+</div>
+    <div class="add-card-title">+ Add Your College</div>
+    <div class="add-card-desc">Don't see your college listed? Click here to create its dedicated hub in 5 seconds.</div>
+  `;
+  addCard.addEventListener('click', () => {
+    openAddCollegeModal(searchTerm);
+  });
+  grid.appendChild(addCard);
 }
 
+// ==================== LIVE AUTOCOMPLETE SUGGESTIONS ====================
+function updateLiveSuggestions(query) {
+  const box = elements.collegeSuggestionsDropdown;
+  const term = (query || '').trim().toLowerCase();
+
+  if (!term) {
+    box.style.display = 'none';
+    elements.clearCollegeSearchBtn.style.display = 'none';
+    return;
+  }
+
+  elements.clearCollegeSearchBtn.style.display = 'block';
+
+  const colleges = getAllColleges();
+  const matches = colleges.filter(c =>
+    c.name.toLowerCase().includes(term) ||
+    (c.subtitle && c.subtitle.toLowerCase().includes(term)) ||
+    (c.city && c.city.toLowerCase().includes(term))
+  ).slice(0, 6);
+
+  let html = '';
+
+  if (matches.length > 0) {
+    matches.forEach(c => {
+      const colItems = allItems.filter(i => i.collegeName && i.collegeName.toLowerCase() === c.name.toLowerCase());
+      html += `
+        <div class="suggestion-item-col" data-name="${escapeHtml(c.name)}">
+          <div class="suggestion-col-left">
+            <span class="suggestion-col-icon">${c.icon || '🏛️'}</span>
+            <div>
+              <div class="suggestion-col-name">${escapeHtml(c.name)}</div>
+              <div class="suggestion-col-city">📍 ${escapeHtml(c.city || c.subtitle || '')}</div>
+            </div>
+          </div>
+          <span class="college-card-badge ${colItems.length > 0 ? 'has-items' : ''}">
+            ${colItems.length} Reports
+          </span>
+        </div>
+      `;
+    });
+  }
+
+  // Always append the "Add New College" prompt row
+  html += `
+    <div class="suggestion-item-col suggestion-add-row" id="suggestionAddRow" data-name="${escapeHtml(query)}">
+      <div class="suggestion-col-left">
+        <span class="suggestion-col-icon">✨</span>
+        <div>
+          <div class="suggestion-col-name">+ Add "${escapeHtml(query)}" as a new college</div>
+          <div class="suggestion-col-city">Click to create this college's campus hub</div>
+        </div>
+      </div>
+      <span style="font-size: 1.2rem;">➔</span>
+    </div>
+  `;
+
+  box.innerHTML = html;
+  box.style.display = 'block';
+
+  // Attach event listeners to suggestion items
+  box.querySelectorAll('.suggestion-item-col').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (row.id === 'suggestionAddRow') {
+        openAddCollegeModal(query);
+      } else {
+        selectCollege(row.dataset.name, true);
+      }
+      box.style.display = 'none';
+    });
+  });
+}
+
+function openAddCollegeModal(presetName = '') {
+  if (presetName && typeof presetName === 'string') {
+    elements.newCollegeName.value = presetName.trim();
+  }
+  elements.addCollegeModalOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => elements.newCollegeName.focus(), 150);
+}
+
+function closeAddCollegeModal() {
+  elements.addCollegeModalOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function handleAddCollegeSubmit(e) {
+  e.preventDefault();
+  const name = elements.newCollegeName.value.trim();
+  const subtitle = elements.newCollegeSubtitle.value.trim() || 'Campus Hub';
+  const city = elements.newCollegeCity.value.trim();
+  const icon = elements.newCollegeIcon.value || '🏛️';
+
+  if (!name) return;
+
+  const isPoly = name.toLowerCase().includes('polytechnic') || name.toLowerCase().includes('gptc');
+  const newCol = {
+    name,
+    subtitle,
+    city,
+    icon,
+    type: isPoly ? 'polytechnic' : 'university'
+  };
+
+  const list = getCustomColleges();
+  const existingIdx = list.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
+  if (existingIdx >= 0) {
+    list[existingIdx] = newCol;
+  } else {
+    list.unshift(newCol);
+  }
+  saveCustomColleges(list);
+
+  // Sync to Firestore if cloud is active
+  if (isCloudActive && db) {
+    try {
+      addDoc(collection(db, "customColleges"), { ...newCol, createdAt: serverTimestamp() });
+    } catch(err) {
+      console.warn("Could not sync college to cloud:", err.message);
+    }
+  }
+
+  elements.addCollegeForm.reset();
+  closeAddCollegeModal();
+  selectCollege(name, true);
+  showToast(`🎉 Campus Hub created for ${name}!`);
+}
+
+// ==================== HUB NAVIGATION & URL HASH ROUTING ====================
 function selectCollege(collegeName, updateHash = true) {
   if (!collegeName) return;
   selectedCollege = collegeName;
@@ -534,6 +725,9 @@ function selectCollege(collegeName, updateHash = true) {
   if (updateHash) {
     window.location.hash = '#college=' + encodeURIComponent(collegeName);
   }
+
+  // Hide suggestions and reset input
+  elements.collegeSuggestionsDropdown.style.display = 'none';
 
   // Switch to Hub View
   elements.campusSelectorSection.style.display = 'none';
@@ -782,7 +976,7 @@ function renderActiveFilters() {
 }
 
 function renderAll() {
-  renderCampusCards(elements.collegeSearchInput.value);
+  renderCampusCards(elements.collegeSearchInput.value, activeCollegeFilterType);
   renderItems();
   updateStats();
   renderActiveFilters();
@@ -957,9 +1151,65 @@ function setupListeners() {
     showToast(`🔗 Copied share link for ${selectedCollege}!`);
   });
 
-  // College search in selector view
+  // College Search Input & Live Suggestions
   elements.collegeSearchInput.addEventListener('input', (e) => {
-    renderCampusCards(e.target.value);
+    const val = e.target.value;
+    updateLiveSuggestions(val);
+    renderCampusCards(val, activeCollegeFilterType);
+  });
+
+  elements.collegeSearchInput.addEventListener('focus', (e) => {
+    if (e.target.value.trim()) {
+      updateLiveSuggestions(e.target.value);
+    }
+  });
+
+  elements.clearCollegeSearchBtn.addEventListener('click', () => {
+    elements.collegeSearchInput.value = '';
+    elements.collegeSuggestionsDropdown.style.display = 'none';
+    elements.clearCollegeSearchBtn.style.display = 'none';
+    renderCampusCards('', activeCollegeFilterType);
+  });
+
+  // Close live suggestions on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.college-search-box-container')) {
+      elements.collegeSuggestionsDropdown.style.display = 'none';
+    }
+  });
+
+  // Category Filter Chips
+  if (elements.campusCategoryChips) {
+    elements.campusCategoryChips.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        elements.campusCategoryChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeCollegeFilterType = chip.dataset.type;
+        renderCampusCards(elements.collegeSearchInput.value, activeCollegeFilterType);
+      });
+    });
+  }
+
+  // Add College Buttons
+  elements.openAddCollegeBtn.addEventListener('click', () => {
+    openAddCollegeModal(elements.collegeSearchInput.value);
+  });
+  elements.headerAddCollegeBtn.addEventListener('click', () => {
+    openAddCollegeModal(elements.collegeSearchInput.value);
+  });
+  elements.closeAddCollegeModal.addEventListener('click', closeAddCollegeModal);
+  elements.addCollegeModalOverlay.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeAddCollegeModal();
+  });
+  elements.addCollegeForm.addEventListener('submit', handleAddCollegeSubmit);
+
+  // Emoji Icon Buttons in Add College Modal
+  elements.iconButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      elements.iconButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      elements.newCollegeIcon.value = btn.dataset.icon;
+    });
   });
 
   // Zone Pills
@@ -1035,7 +1285,7 @@ function setupListeners() {
     resetImageUpload();
   });
 
-  // Hash route changes (e.g. back button in browser)
+  // Hash route changes
   window.addEventListener('hashchange', checkUrlHash);
 }
 

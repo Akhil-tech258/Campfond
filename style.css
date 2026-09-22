@@ -1005,29 +1005,246 @@ body {
     justify-content: center;
 }
 
-/* College Search & Selector */
-.college-search-wrapper {
+/* Impressive College Search Box */
+.college-search-box-container {
     position: relative;
-    max-width: 620px;
-    margin: 24px auto 0;
+    max-width: 680px;
+    margin: 28px auto 14px;
 }
-.college-search-wrapper input {
-    width: 100%;
-    padding: 16px 20px 16px 52px;
+.college-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px 8px 20px;
     border-radius: var(--radius-full);
     border: 1px solid var(--border);
     background: var(--surface);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    transition: all var(--transition);
+}
+.college-search-bar:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 12px 40px var(--accent-glow);
+    background: var(--surface-hover);
+}
+.search-main-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.college-search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
     color: var(--text);
     font-size: 1.05rem;
     font-family: inherit;
     outline: none;
-    box-shadow: var(--shadow-md);
+}
+.college-search-bar input::placeholder {
+    color: var(--text-muted);
+}
+.btn-clear-search {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+.btn-clear-search:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.1);
+}
+.btn-add-college-trigger {
+    white-space: nowrap;
+    border-radius: var(--radius-full);
+    padding: 10px 18px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 4px 14px var(--accent-glow);
+    flex-shrink: 0;
+}
+
+/* Floating Live Suggestions Dropdown */
+.college-suggestions-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 150;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(20px);
+    padding: 6px;
+    animation: slideDown 0.2s ease-out;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.suggestion-item-col {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.suggestion-item-col:hover {
+    background: var(--accent-light);
+    transform: translateX(4px);
+}
+.suggestion-col-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.suggestion-col-icon {
+    font-size: 1.3rem;
+}
+.suggestion-col-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+}
+.suggestion-col-city {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+.suggestion-add-row {
+    border-top: 1px dashed var(--border);
+    margin-top: 4px;
+    padding-top: 8px;
+    color: var(--accent);
+    font-weight: 600;
+}
+.suggestion-add-row:hover {
+    background: rgba(123, 147, 252, 0.15);
+}
+
+/* Category Filter Chips */
+.campus-category-chips {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+.chip {
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
     transition: all var(--transition);
 }
-.college-search-wrapper input:focus {
+.chip:hover {
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--accent-glow);
+    color: var(--text);
+    background: var(--surface-hover);
+}
+.chip.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.colleges-count-pill {
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+/* Add College Card in Grid */
+.college-card.add-college-card {
+    border: 2px dashed rgba(123, 147, 252, 0.35);
+    background: rgba(123, 147, 252, 0.04);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px 20px;
+    cursor: pointer;
+}
+.college-card.add-college-card:hover {
+    border-color: var(--accent);
+    background: rgba(123, 147, 252, 0.1);
+    transform: translateY(-5px);
+}
+.add-card-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    transition: all var(--transition);
+}
+.college-card.add-college-card:hover .add-card-icon {
+    transform: scale(1.15) rotate(90deg);
+    background: var(--accent);
+    color: #fff;
+}
+.add-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+.add-card-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Emoji Icon Selector in Modal */
+.icon-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.icon-btn:hover {
+    border-color: var(--accent);
+    transform: scale(1.08);
+}
+.icon-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-light);
+    box-shadow: 0 0 12px var(--accent-glow);
 }
 .campus-grid-header {
     display: flex;
